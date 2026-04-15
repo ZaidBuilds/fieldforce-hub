@@ -75,7 +75,7 @@ export default function Login() {
               {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
             </Button>
           </form>
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center space-y-2">
             <button
               type="button"
               onClick={() => setIsSignUp(!isSignUp)}

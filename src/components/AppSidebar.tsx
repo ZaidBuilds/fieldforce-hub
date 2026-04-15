@@ -1,6 +1,5 @@
-import { LayoutDashboard, Briefcase, Users, FileText, MapPin, LogOut, Zap } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Users, FileText, MapPin, Zap } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -12,7 +11,6 @@ const navItems = [
 ];
 
 export default function AppSidebar() {
-  const { profile, signOut } = useAuth();
   const location = useLocation();
 
   return (
@@ -41,21 +39,6 @@ export default function AppSidebar() {
           </NavLink>
         ))}
       </nav>
-
-      <div className="border-t border-sidebar-border p-3">
-        <div className="flex items-center gap-3 rounded-lg px-3 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-bold text-sidebar-foreground">
-            {profile?.full_name?.charAt(0) ?? 'U'}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="truncate text-sm font-medium text-sidebar-foreground">{profile?.full_name ?? 'User'}</p>
-            <p className="truncate text-xs text-sidebar-foreground/50">{profile?.role ?? 'owner'}</p>
-          </div>
-          <button onClick={signOut} className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors">
-            <LogOut className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
     </aside>
   );
 }

@@ -33,13 +33,8 @@ export default function Technicians() {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Technicians" subtitle="Monitor your field workforce">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-heading font-bold">Technicians</h1>
-          <p className="text-muted-foreground">Monitor your field workforce</p>
-        </div>
-
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {technicians.length === 0 ? (
             <Card className="col-span-full shadow-card">

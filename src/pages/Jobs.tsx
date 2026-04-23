@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, MapPin, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import type { Enums } from '@/integrations/supabase/types';
@@ -78,16 +79,13 @@ export default function Jobs() {
   const filteredJobs = filterStatus === 'all' ? jobs : jobs.filter(j => j.status === filterStatus);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-heading font-bold">Jobs</h1>
-            <p className="text-muted-foreground">Manage and track all service jobs</p>
-          </div>
-          <Dialog open={open} onOpenChange={setOpen}>
+    <DashboardLayout
+      title="Jobs"
+      subtitle="Manage and track all service jobs"
+      action={
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="gradient-primary text-primary-foreground gap-2">
+              <Button className="rounded-full gradient-primary text-primary-foreground shadow-glow gap-2">
                 <Plus className="h-4 w-4" /> New Job
               </Button>
             </DialogTrigger>
@@ -152,8 +150,9 @@ export default function Jobs() {
               </form>
             </DialogContent>
           </Dialog>
-        </div>
-
+      }
+    >
+      <div className="space-y-6">
         <div className="flex gap-2">
           {['all', 'pending', 'assigned', 'in_progress', 'completed', 'cancelled'].map(s => (
             <Button key={s} variant={filterStatus === s ? 'default' : 'outline'} size="sm"
@@ -172,7 +171,8 @@ export default function Jobs() {
             </Card>
           ) : (
             filteredJobs.map(job => (
-              <Card key={job.id} className="shadow-card hover:shadow-card-hover transition-shadow animate-fade-in">
+              <Link key={job.id} to={`/app/jobs/${job.id}`} className="block">
+              <Card className="shadow-card hover:shadow-card-hover transition-shadow animate-fade-in border-border/70">
                 <CardContent className="flex items-center justify-between p-4">
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-center gap-2">
@@ -199,6 +199,7 @@ export default function Jobs() {
                   </div>
                 </CardContent>
               </Card>
+              </Link>
             ))
           )}
         </div>

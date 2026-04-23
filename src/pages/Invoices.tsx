@@ -17,13 +17,8 @@ export default function Invoices() {
   });
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Invoices" subtitle="GST-ready invoice tracking">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-heading font-bold">Invoices</h1>
-          <p className="text-muted-foreground">GST-ready invoice tracking</p>
-        </div>
-
         {invoices.length === 0 ? (
           <Card className="shadow-card">
             <CardContent className="py-12 text-center text-muted-foreground">

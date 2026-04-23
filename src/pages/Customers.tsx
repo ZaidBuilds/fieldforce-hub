@@ -48,16 +48,13 @@ export default function Customers() {
   });
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-heading font-bold">Customers</h1>
-            <p className="text-muted-foreground">Manage your customer directory</p>
-          </div>
-          <Dialog open={open} onOpenChange={setOpen}>
+    <DashboardLayout
+      title="Customers"
+      subtitle="Manage your customer directory"
+      action={
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="gradient-primary text-primary-foreground gap-2"><Plus className="h-4 w-4" /> Add Customer</Button>
+              <Button className="rounded-full gradient-primary text-primary-foreground shadow-glow gap-2"><Plus className="h-4 w-4" /> Add Customer</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle className="font-heading">Add Customer</DialogTitle></DialogHeader>
@@ -79,8 +76,9 @@ export default function Customers() {
               </form>
             </DialogContent>
           </Dialog>
-        </div>
-
+      }
+    >
+      <div className="space-y-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {customers.length === 0 ? (
             <Card className="col-span-full shadow-card">

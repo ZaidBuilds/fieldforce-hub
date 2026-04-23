@@ -48,7 +48,7 @@ export default function Settings() {
 
   const save = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('business_settings').update(form).eq('owner_id', DEFAULT_OWNER);
+      const { error } = await supabase.from('business_settings').update(form as never).eq('owner_id', DEFAULT_OWNER);
       if (error) throw error;
     },
     onSuccess: () => {

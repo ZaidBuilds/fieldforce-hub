@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,6 +34,16 @@ const App = () => (
           <Route path="/app/invoices" element={<Invoices />} />
           <Route path="/app/reports" element={<Reports />} />
           <Route path="/app/settings" element={<Settings />} />
+          {/* Legacy redirects */}
+          <Route path="/dashboard" element={<Navigate to="/app" replace />} />
+          <Route path="/jobs" element={<Navigate to="/app/jobs" replace />} />
+          <Route path="/jobs/:id" element={<Navigate to="/app/jobs" replace />} />
+          <Route path="/schedule" element={<Navigate to="/app/schedule" replace />} />
+          <Route path="/technicians" element={<Navigate to="/app/technicians" replace />} />
+          <Route path="/customers" element={<Navigate to="/app/customers" replace />} />
+          <Route path="/invoices" element={<Navigate to="/app/invoices" replace />} />
+          <Route path="/reports" element={<Navigate to="/app/reports" replace />} />
+          <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

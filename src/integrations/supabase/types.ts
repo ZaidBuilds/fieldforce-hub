@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_settings: {
+        Row: {
+          address: string | null
+          business_name: string
+          city: string | null
+          created_at: string
+          default_gst_rate: number
+          email: string | null
+          gst_number: string | null
+          id: string
+          invoice_prefix: string
+          logo_url: string | null
+          next_invoice_number: number
+          owner_id: string
+          phone: string | null
+          pincode: string | null
+          state: string | null
+          updated_at: string
+          upi_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_name?: string
+          city?: string | null
+          created_at?: string
+          default_gst_rate?: number
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          invoice_prefix?: string
+          logo_url?: string | null
+          next_invoice_number?: number
+          owner_id: string
+          phone?: string | null
+          pincode?: string | null
+          state?: string | null
+          updated_at?: string
+          upi_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_name?: string
+          city?: string | null
+          created_at?: string
+          default_gst_rate?: number
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          invoice_prefix?: string
+          logo_url?: string | null
+          next_invoice_number?: number
+          owner_id?: string
+          phone?: string | null
+          pincode?: string | null
+          state?: string | null
+          updated_at?: string
+          upi_id?: string | null
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -122,6 +182,36 @@ export type Database = {
           },
         ]
       }
+      job_parts: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          name: string
+          quantity: number
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          name: string
+          quantity?: number
+          total?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          name?: string
+          quantity?: number
+          total?: number
+          unit_price?: number
+        }
+        Relationships: []
+      }
       job_photos: {
         Row: {
           captured_at: string
@@ -171,7 +261,9 @@ export type Database = {
           city: string | null
           created_at: string
           created_by: string | null
+          customer_feedback: string | null
           customer_id: string
+          customer_rating: number | null
           customer_signature_url: string | null
           description: string | null
           id: string
@@ -190,6 +282,7 @@ export type Database = {
           status: Database["public"]["Enums"]["job_status"]
           title: string
           updated_at: string
+          whatsapp_sent_at: string | null
         }
         Insert: {
           address?: string | null
@@ -201,7 +294,9 @@ export type Database = {
           city?: string | null
           created_at?: string
           created_by?: string | null
+          customer_feedback?: string | null
           customer_id: string
+          customer_rating?: number | null
           customer_signature_url?: string | null
           description?: string | null
           id?: string
@@ -220,6 +315,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["job_status"]
           title: string
           updated_at?: string
+          whatsapp_sent_at?: string | null
         }
         Update: {
           address?: string | null
@@ -231,7 +327,9 @@ export type Database = {
           city?: string | null
           created_at?: string
           created_by?: string | null
+          customer_feedback?: string | null
           customer_id?: string
+          customer_rating?: number | null
           customer_signature_url?: string | null
           description?: string | null
           id?: string
@@ -250,6 +348,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["job_status"]
           title?: string
           updated_at?: string
+          whatsapp_sent_at?: string | null
         }
         Relationships: [
           {

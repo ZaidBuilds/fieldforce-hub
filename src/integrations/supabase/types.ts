@@ -127,8 +127,14 @@ export type Database = {
           invoice_number: string
           is_paid: boolean
           job_id: string
+          notes: string | null
           paid_at: string | null
+          payment_link_created_at: string | null
+          payment_link_status: string
           pdf_url: string | null
+          razorpay_payment_id: string | null
+          razorpay_payment_link_id: string | null
+          razorpay_payment_link_url: string | null
           subtotal: number
           total_amount: number
           updated_at: string
@@ -143,8 +149,14 @@ export type Database = {
           invoice_number: string
           is_paid?: boolean
           job_id: string
+          notes?: string | null
           paid_at?: string | null
+          payment_link_created_at?: string | null
+          payment_link_status?: string
           pdf_url?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_payment_link_id?: string | null
+          razorpay_payment_link_url?: string | null
           subtotal: number
           total_amount: number
           updated_at?: string
@@ -159,8 +171,14 @@ export type Database = {
           invoice_number?: string
           is_paid?: boolean
           job_id?: string
+          notes?: string | null
           paid_at?: string | null
+          payment_link_created_at?: string | null
+          payment_link_status?: string
           pdf_url?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_payment_link_id?: string | null
+          razorpay_payment_link_url?: string | null
           subtotal?: number
           total_amount?: number
           updated_at?: string

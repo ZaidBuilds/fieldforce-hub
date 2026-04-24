@@ -16,6 +16,8 @@ import {
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import type { Enums } from '@/integrations/supabase/types';
+import { downloadInvoicePdf } from '@/lib/invoicePdf';
+import { loadInvoicePdfData } from '@/lib/invoiceData';
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -90,7 +92,7 @@ export default function JobDetail() {
       const gstAmount = +(subtotal * (gstRate / 100)).toFixed(2);
       const total = +(subtotal + gstAmount).toFixed(2);
       const invNum = `INV-${format(new Date(), 'yyMMdd')}-${Math.floor(Math.random() * 9000 + 1000)}`;
-      const { error } = await supabase.from('invoices').insert({
+      const { data: inserted, error } = await supabase.from('invoices').insert({
         job_id: job.id,
         customer_id: job.customer_id,
         invoice_number: invNum,
@@ -99,13 +101,19 @@ export default function JobDetail() {
         gst_amount: gstAmount,
         total_amount: total,
         is_paid: job.payment_status === 'collected',
-      });
+      }).select('id').single();
       if (error) throw error;
-      return invNum;
+      return { invNum, id: inserted.id };
     },
-    onSuccess: (invNum) => {
-      toast.success(`Invoice ${invNum} generated`);
+    onSuccess: async ({ invNum, id }) => {
+      toast.success(`Invoice ${invNum} generated — downloading PDF…`);
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      try {
+        const data = await loadInvoicePdfData(id);
+        downloadInvoicePdf(data);
+      } catch (e) {
+        toast.error(`PDF generation failed: ${(e as Error).message}`);
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });

@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
+import QRCode from 'qrcode';
 
 export type InvoicePdfBusiness = {
   business_name?: string | null;
@@ -12,6 +13,7 @@ export type InvoicePdfBusiness = {
   email?: string | null;
   gst_number?: string | null;
   upi_id?: string | null;
+  logo_url?: string | null;
 };
 
 export type InvoicePdfCustomer = {
@@ -59,24 +61,93 @@ const ACCENT: [number, number, number] = [13, 47, 92];
 const MUTED: [number, number, number] = [100, 116, 139];
 const LIGHT: [number, number, number] = [243, 244, 246];
 
-export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
+async function imageUrlToDataUrl(url: string): Promise<{ dataUrl: string; format: 'PNG' | 'JPEG' } | null> {
+  try {
+    const res = await fetch(url, { mode: 'cors' });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        const fmt = dataUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+        resolve({ dataUrl, format: fmt });
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+function monogram(name?: string | null): string {
+  if (!name) return 'FF';
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0]?.toUpperCase() ?? '')
+    .join('') || 'FF';
+}
+
+function buildUpiUri(upiId: string, name: string, amount: number, note: string): string {
+  const params = new URLSearchParams({
+    pa: upiId,
+    pn: name,
+    am: amount.toFixed(2),
+    cu: 'INR',
+    tn: note,
+  });
+  return `upi://pay?${params.toString()}`;
+}
+
+export async function generateInvoicePdf(data: InvoicePdfData): Promise<jsPDF> {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const margin = 36;
 
-  // Header bar
+  // Top accent bar with subtle gradient stripes
   doc.setFillColor(...PRIMARY);
-  doc.rect(0, 0, pageW, 8, 'F');
+  doc.rect(0, 0, pageW, 10, 'F');
+  doc.setFillColor(...ACCENT);
+  doc.rect(0, 10, pageW, 2, 'F');
 
-  // Brand block
+  // Logo or monogram
+  const logoSize = 52;
+  const logoX = margin;
+  const logoY = 28;
+  let logoLoaded = false;
+  if (data.business.logo_url) {
+    const img = await imageUrlToDataUrl(data.business.logo_url);
+    if (img) {
+      try {
+        doc.addImage(img.dataUrl, img.format, logoX, logoY, logoSize, logoSize);
+        logoLoaded = true;
+      } catch {
+        logoLoaded = false;
+      }
+    }
+  }
+  if (!logoLoaded) {
+    doc.setFillColor(...PRIMARY);
+    doc.roundedRect(logoX, logoY, logoSize, logoSize, 10, 10, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(255, 255, 255);
+    doc.text(monogram(data.business.business_name), logoX + logoSize / 2, logoY + logoSize / 2 + 7, { align: 'center' });
+  }
+
+  // Brand text block
+  const brandX = logoX + logoSize + 14;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
+  doc.setFontSize(18);
   doc.setTextColor(...ACCENT);
-  doc.text(data.business.business_name || 'Field Service Business', margin, 50);
+  doc.text(data.business.business_name || 'Field Service Business', brandX, logoY + 18);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(...MUTED);
   const bizLines = [
     data.business.address,
@@ -84,44 +155,48 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
     [data.business.phone && `Ph: ${data.business.phone}`, data.business.email].filter(Boolean).join('  |  '),
     data.business.gst_number && `GSTIN: ${data.business.gst_number}`,
   ].filter(Boolean) as string[];
-  bizLines.forEach((line, i) => doc.text(line, margin, 66 + i * 12));
+  bizLines.forEach((line, i) => doc.text(line, brandX, logoY + 32 + i * 11));
 
   // Invoice meta box (right)
-  const metaX = pageW - margin - 200;
-  const metaY = 40;
-  doc.setFillColor(...LIGHT);
-  doc.roundedRect(metaX, metaY, 200, 80, 6, 6, 'F');
+  const metaW = 200;
+  const metaX = pageW - margin - metaW;
+  const metaY = 28;
+  doc.setFillColor(...ACCENT);
+  doc.roundedRect(metaX, metaY, metaW, 28, 6, 6, 'F');
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.setTextColor(...ACCENT);
-  doc.text('TAX INVOICE', metaX + 12, metaY + 22);
+  doc.setFontSize(13);
+  doc.setTextColor(255, 255, 255);
+  doc.text('TAX INVOICE', metaX + 12, metaY + 19);
+
+  doc.setFillColor(...LIGHT);
+  doc.roundedRect(metaX, metaY + 30, metaW, 50, 6, 6, 'F');
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(...MUTED);
-  doc.text('Invoice #', metaX + 12, metaY + 42);
+  doc.text('Invoice #', metaX + 12, metaY + 46);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...ACCENT);
-  doc.text(data.invoiceNumber, metaX + 70, metaY + 42);
+  doc.text(data.invoiceNumber, metaX + 70, metaY + 46);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...MUTED);
-  doc.text('Date', metaX + 12, metaY + 58);
+  doc.text('Date', metaX + 12, metaY + 62);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...ACCENT);
-  doc.text(format(new Date(data.createdAt), 'dd MMM yyyy'), metaX + 70, metaY + 58);
+  doc.text(format(new Date(data.createdAt), 'dd MMM yyyy'), metaX + 70, metaY + 62);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...MUTED);
-  doc.text('Status', metaX + 12, metaY + 72);
+  doc.text('Status', metaX + 12, metaY + 76);
   doc.setFont('helvetica', 'bold');
   if (data.isPaid) {
     doc.setTextColor(22, 163, 74);
-    doc.text('PAID', metaX + 70, metaY + 72);
+    doc.text('PAID', metaX + 70, metaY + 76);
   } else {
     doc.setTextColor(217, 119, 6);
-    doc.text('UNPAID', metaX + 70, metaY + 72);
+    doc.text('UNPAID', metaX + 70, metaY + 76);
   }
 
   // Bill-to block
-  let y = 150;
+  let y = 165;
   doc.setDrawColor(229, 231, 235);
   doc.line(margin, y, pageW - margin, y);
   y += 18;
@@ -166,8 +241,9 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
     head: [['Description', 'Qty', 'Unit price', 'Amount']],
     body: rows,
     theme: 'grid',
-    headStyles: { fillColor: ACCENT, textColor: 255, fontStyle: 'bold', fontSize: 10 },
-    bodyStyles: { fontSize: 10, textColor: [30, 41, 59] },
+    headStyles: { fillColor: ACCENT, textColor: 255, fontStyle: 'bold', fontSize: 10, cellPadding: 8 },
+    bodyStyles: { fontSize: 10, textColor: [30, 41, 59], cellPadding: 7 },
+    alternateRowStyles: { fillColor: [250, 250, 251] },
     columnStyles: {
       0: { cellWidth: 'auto' },
       1: { halign: 'right', cellWidth: 50 },
@@ -201,28 +277,84 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
   afterY += 4;
   totalRow('TOTAL', inr(data.total), { bold: true, bg: true });
 
-  // Payment info
+  // Payment info with UPI QR
   afterY += 16;
   if (!data.isPaid && (data.business.upi_id || data.paymentLinkUrl)) {
+    const boxH = 96;
+    doc.setFillColor(255, 247, 237);
     doc.setDrawColor(...PRIMARY);
     doc.setLineWidth(0.8);
-    doc.roundedRect(margin, afterY, pageW - margin * 2, 56, 6, 6, 'S');
+    doc.roundedRect(margin, afterY, pageW - margin * 2, boxH, 8, 8, 'FD');
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.setTextColor(...PRIMARY);
-    doc.text('PAYMENT', margin + 12, afterY + 18);
+    doc.text('SCAN & PAY', margin + 14, afterY + 20);
+
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(...ACCENT);
-    let py = afterY + 32;
+    let py = afterY + 38;
     if (data.business.upi_id) {
-      doc.text(`UPI: ${data.business.upi_id}`, margin + 12, py);
-      py += 12;
+      doc.setFont('helvetica', 'bold');
+      doc.text('UPI ID', margin + 14, py);
+      doc.setFont('helvetica', 'normal');
+      doc.text(data.business.upi_id, margin + 60, py);
+      py += 14;
     }
     if (data.paymentLinkUrl) {
-      doc.text(`Pay online: ${data.paymentLinkUrl}`, margin + 12, py);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Online', margin + 14, py);
+      doc.setFont('helvetica', 'normal');
+      doc.text(data.paymentLinkUrl, margin + 60, py, { maxWidth: pageW - margin * 2 - 180 });
+      py += 14;
     }
-    afterY += 70;
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(...MUTED);
+    doc.text(`Reference: ${data.invoiceNumber}`, margin + 14, afterY + boxH - 12);
+
+    // QR code on the right of the box
+    if (data.business.upi_id) {
+      try {
+        const upiUri = buildUpiUri(
+          data.business.upi_id,
+          data.business.business_name || 'Payment',
+          data.total,
+          data.invoiceNumber,
+        );
+        const qrDataUrl = await QRCode.toDataURL(upiUri, { margin: 0, width: 240 });
+        const qrSize = 76;
+        const qrX = pageW - margin - qrSize - 14;
+        const qrY = afterY + (boxH - qrSize) / 2;
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8, 4, 4, 'F');
+        doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+      } catch {
+        // ignore QR failures
+      }
+    }
+    afterY += boxH + 12;
+  }
+
+  // Signature line
+  const sigY = pageH - 90;
+  if (afterY < sigY - 20) {
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.5);
+    doc.line(pageW - margin - 160, sigY, pageW - margin, sigY);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...MUTED);
+    doc.text('Authorised signatory', pageW - margin - 80, sigY + 12, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...ACCENT);
+    doc.text(
+      `for ${data.business.business_name || 'Field Service Business'}`,
+      pageW - margin - 80,
+      sigY + 24,
+      { align: 'center' },
+    );
   }
 
   if (data.notes) {
@@ -235,6 +367,21 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
     const wrapped = doc.splitTextToSize(data.notes, pageW - margin * 2);
     doc.text(wrapped, margin, afterY + 14);
   }
+
+  // Diagonal status watermark
+  doc.saveGraphicsState();
+  // @ts-expect-error jsPDF GState typing
+  doc.setGState(new doc.GState({ opacity: 0.06 }));
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(120);
+  if (data.isPaid) {
+    doc.setTextColor(22, 163, 74);
+    doc.text('PAID', pageW / 2, pageH / 2 + 40, { align: 'center', angle: -22 });
+  } else {
+    doc.setTextColor(...PRIMARY);
+    doc.text('UNPAID', pageW / 2, pageH / 2 + 40, { align: 'center', angle: -22 });
+  }
+  doc.restoreGraphicsState();
 
   // Footer
   doc.setDrawColor(229, 231, 235);
@@ -254,12 +401,12 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
   return doc;
 }
 
-export function downloadInvoicePdf(data: InvoicePdfData) {
-  const doc = generateInvoicePdf(data);
+export async function downloadInvoicePdf(data: InvoicePdfData) {
+  const doc = await generateInvoicePdf(data);
   doc.save(`${data.invoiceNumber}.pdf`);
 }
 
-export function openInvoicePdf(data: InvoicePdfData) {
-  const doc = generateInvoicePdf(data);
+export async function openInvoicePdf(data: InvoicePdfData) {
+  const doc = await generateInvoicePdf(data);
   window.open(doc.output('bloburl'), '_blank');
 }

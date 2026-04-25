@@ -11,13 +11,19 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   ArrowLeft, MapPin, Calendar, Phone, Play, CheckCircle2, IndianRupee,
-  MessageCircle, FileText, User, Clock, Navigation, Plus, Trash2,
+  MessageCircle, FileText, User, Clock, Navigation, Plus, Trash2, Share2, Star, Copy,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import type { Enums } from '@/integrations/supabase/types';
 import { downloadInvoicePdf } from '@/lib/invoicePdf';
 import { loadInvoicePdfData } from '@/lib/invoiceData';
+import {
+  uploadInvoicePdfAndGetSignedUrl,
+  buildTrackingWhatsAppUrl,
+  buildFeedbackWhatsAppUrl,
+  buildInvoiceWhatsAppUrl,
+} from '@/lib/invoiceShare';
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -26,6 +32,7 @@ export default function JobDetail() {
   const [partName, setPartName] = useState('');
   const [partPrice, setPartPrice] = useState('');
   const [partQty, setPartQty] = useState('1');
+  const [sharingInvoice, setSharingInvoice] = useState(false);
 
   const { data: job, isLoading } = useQuery({
     queryKey: ['job', id],
@@ -105,11 +112,11 @@ export default function JobDetail() {
       if (error) throw error;
       return { invNum, id: inserted.id };
     },
-    onSuccess: async ({ invNum, id }) => {
+    onSuccess: async ({ invNum, id: invoiceId }) => {
       toast.success(`Invoice ${invNum} generated — downloading PDF…`);
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       try {
-        const data = await loadInvoicePdfData(id);
+        const data = await loadInvoicePdfData(invoiceId);
         downloadInvoicePdf(data);
       } catch (e) {
         toast.error(`PDF generation failed: ${(e as Error).message}`);
@@ -159,14 +166,81 @@ export default function JobDetail() {
     toast.success('Job completed');
   };
 
-  const handleWhatsApp = () => {
-    if (!customer?.phone) return toast.error('No customer phone');
-    const phone = customer.phone.replace(/\D/g, '');
-    const msg = encodeURIComponent(
-      `Hello ${customer.name}, your service "${job.title}" is updated.\n\nStatus: ${job.status}\nAmount: ₹${grand}\n\nThank you for choosing FieldForce!`
-    );
-    window.open(`https://wa.me/91${phone.slice(-10)}?text=${msg}`, '_blank');
+  const trackingUrl = job.tracking_token
+    ? `${window.location.origin}/track/${job.tracking_token}`
+    : null;
+  const feedbackUrl = job.feedback_token
+    ? `${window.location.origin}/feedback/${job.feedback_token}`
+    : null;
+
+  const handleShareTracking = () => {
+    if (!customer?.phone) return toast.error('No customer phone on file');
+    if (!trackingUrl) return toast.error('No tracking link available');
+    const url = buildTrackingWhatsAppUrl({
+      phone: customer.phone,
+      customerName: customer.name,
+      jobTitle: job.title,
+      trackingUrl,
+    });
+    window.open(url, '_blank');
     updateJob.mutate({ whatsapp_sent_at: new Date().toISOString() });
+  };
+
+  const handleShareFeedback = () => {
+    if (!customer?.phone) return toast.error('No customer phone on file');
+    if (!feedbackUrl) return toast.error('No feedback link available');
+    const url = buildFeedbackWhatsAppUrl({
+      phone: customer.phone,
+      customerName: customer.name,
+      jobTitle: job.title,
+      feedbackUrl,
+    });
+    window.open(url, '_blank');
+  };
+
+  const handleCopyTracking = () => {
+    if (!trackingUrl) return;
+    navigator.clipboard.writeText(trackingUrl);
+    toast.success('Tracking link copied');
+  };
+
+  const handleShareInvoice = async () => {
+    if (!customer?.phone) return toast.error('No customer phone on file');
+    setSharingInvoice(true);
+    try {
+      // Find the most recent invoice for this job
+      const { data: inv, error } = await supabase
+        .from('invoices')
+        .select('id, invoice_number, total_amount, is_paid, pdf_url')
+        .eq('job_id', job.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      if (!inv) {
+        toast.error('Generate the GST invoice first');
+        return;
+      }
+      let pdfUrl = inv.pdf_url;
+      if (!pdfUrl) {
+        toast.info('Preparing invoice PDF link…');
+        const res = await uploadInvoicePdfAndGetSignedUrl(inv.id);
+        pdfUrl = res.signedUrl;
+      }
+      const url = buildInvoiceWhatsAppUrl({
+        phone: customer.phone,
+        customerName: customer.name,
+        invoiceNumber: inv.invoice_number,
+        total: Number(inv.total_amount),
+        isPaid: inv.is_paid,
+        pdfUrl,
+      });
+      window.open(url, '_blank');
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSharingInvoice(false);
+    }
   };
 
   return (
@@ -178,8 +252,12 @@ export default function JobDetail() {
           <Button variant="outline" onClick={() => navigate('/app/jobs')} className="rounded-full">
             <ArrowLeft className="mr-1 h-4 w-4" /> Back
           </Button>
-          <Button onClick={handleWhatsApp} className="rounded-full bg-success text-success-foreground hover:bg-success/90">
-            <MessageCircle className="mr-1 h-4 w-4" /> WhatsApp
+          <Button
+            onClick={handleShareTracking}
+            disabled={!customer?.phone}
+            className="rounded-full bg-success text-success-foreground hover:bg-success/90"
+          >
+            <Share2 className="mr-1 h-4 w-4" /> Send tracking link
           </Button>
         </div>
       }

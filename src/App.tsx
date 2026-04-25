@@ -14,6 +14,8 @@ import Invoices from "./pages/Invoices";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import Track from "./pages/Track";
+import Feedback from "./pages/Feedback";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,9 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
+          {/* Public, no-auth pages */}
+          <Route path="/track/:token" element={<Track />} />
+          <Route path="/feedback/:token" element={<Feedback />} />
           <Route path="/app" element={<Dashboard />} />
           <Route path="/app/jobs" element={<Jobs />} />
           <Route path="/app/jobs/:id" element={<JobDetail />} />

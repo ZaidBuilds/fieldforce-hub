@@ -446,6 +446,49 @@ export default function JobDetail() {
             </CardContent>
           </Card>
 
+          {/* Customer share */}
+          <Card className="border-border/70 shadow-card">
+            <CardHeader>
+              <CardTitle className="font-heading text-base flex items-center gap-2">
+                <Share2 className="h-4 w-4 text-primary" /> Customer share
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {trackingUrl && (
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Live tracking link
+                  </p>
+                  <div className="flex items-center gap-1 rounded-xl border border-dashed border-border bg-secondary/40 p-2">
+                    <code className="flex-1 truncate text-[11px] text-muted-foreground">
+                      {trackingUrl}
+                    </code>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleCopyTracking} title="Copy link">
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <Button
+                    onClick={handleShareTracking}
+                    disabled={!customer?.phone}
+                    className="w-full rounded-full bg-success text-success-foreground hover:bg-success/90"
+                  >
+                    <MessageCircle className="mr-1 h-4 w-4" /> Send tracking on WhatsApp
+                  </Button>
+                </div>
+              )}
+              {job.status === 'completed' && feedbackUrl && (
+                <Button
+                  onClick={handleShareFeedback}
+                  disabled={!customer?.phone}
+                  variant="outline"
+                  className="w-full rounded-full border-warning/40 text-warning hover:bg-warning/10 hover:text-warning"
+                >
+                  <Star className="mr-1 h-4 w-4" /> Request feedback
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Payment summary */}
           <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent shadow-card">
             <CardHeader>
@@ -498,6 +541,15 @@ export default function JobDetail() {
               >
                 <FileText className="mr-1 h-4 w-4" />
                 {generateInvoice.isPending ? 'Generating…' : 'Generate GST invoice'}
+              </Button>
+              <Button
+                onClick={handleShareInvoice}
+                disabled={sharingInvoice || !customer?.phone}
+                variant="outline"
+                className="w-full rounded-full border-success/40 text-success hover:bg-success/10 hover:text-success"
+              >
+                <MessageCircle className="mr-1 h-4 w-4" />
+                {sharingInvoice ? 'Preparing link…' : 'Send invoice on WhatsApp'}
               </Button>
               <Button asChild variant="ghost" className="w-full text-xs">
                 <Link to="/app/invoices">View all invoices</Link>

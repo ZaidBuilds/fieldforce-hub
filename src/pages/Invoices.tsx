@@ -18,6 +18,7 @@ import {
 import { toast } from 'sonner';
 import { downloadInvoicePdf, openInvoicePdf } from '@/lib/invoicePdf';
 import { loadInvoicePdfData } from '@/lib/invoiceData';
+import { uploadInvoicePdfAndGetSignedUrl, buildInvoiceWhatsAppUrl } from '@/lib/invoiceShare';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type InvoiceRow = {
@@ -33,6 +34,7 @@ type InvoiceRow = {
   razorpay_payment_id: string | null;
   razorpay_payment_link_url: string | null;
   payment_link_status: string;
+  pdf_url: string | null;
   customers?: { name: string; phone: string } | null;
 };
 
@@ -49,7 +51,7 @@ export default function Invoices() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('invoices')
-        .select('id, invoice_number, total_amount, gst_amount, gst_rate, subtotal, is_paid, created_at, job_id, razorpay_payment_id, razorpay_payment_link_url, payment_link_status, customers(name, phone)')
+        .select('id, invoice_number, total_amount, gst_amount, gst_rate, subtotal, is_paid, created_at, job_id, razorpay_payment_id, razorpay_payment_link_url, payment_link_status, pdf_url, customers(name, phone)')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as InvoiceRow[];
@@ -92,21 +94,42 @@ export default function Invoices() {
   };
 
   const handleCopy = (inv: InvoiceRow) => {
-    if (!inv.razorpay_payment_link_url) {
-      toast.info('No payment link yet — share the PDF instead.');
+    const url = inv.razorpay_payment_link_url || inv.pdf_url;
+    if (!url) {
+      toast.info('Generate the WhatsApp share once to create a public link.');
       return;
     }
-    navigator.clipboard.writeText(inv.razorpay_payment_link_url);
-    toast.success('Payment link copied');
+    navigator.clipboard.writeText(url);
+    toast.success(inv.razorpay_payment_link_url ? 'Payment link copied' : 'Invoice link copied');
   };
 
-  const handleWhatsApp = (inv: InvoiceRow) => {
+  const handleWhatsApp = async (inv: InvoiceRow) => {
     const phone = inv.customers?.phone?.replace(/\D/g, '') ?? '';
     if (!phone) return toast.error('No customer phone');
-    const msg = encodeURIComponent(
-      `Hi ${inv.customers?.name ?? 'customer'},\n\nYour invoice ${inv.invoice_number} of ₹${inv.total_amount.toLocaleString('en-IN')} is ready.\n${inv.is_paid ? 'Payment received — thank you!' : 'Please pay at your earliest convenience.'}\n\nThank you for choosing us!`,
-    );
-    window.open(`https://wa.me/91${phone.slice(-10)}?text=${msg}`, '_blank');
+    setBusyId(inv.id);
+    try {
+      // Reuse existing signed link if present, else upload now
+      let pdfUrl = inv.pdf_url ?? null;
+      if (!pdfUrl) {
+        toast.info('Preparing invoice PDF link…');
+        const res = await uploadInvoicePdfAndGetSignedUrl(inv.id);
+        pdfUrl = res.signedUrl;
+        queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      }
+      const url = buildInvoiceWhatsAppUrl({
+        phone: inv.customers?.phone ?? '',
+        customerName: inv.customers?.name ?? null,
+        invoiceNumber: inv.invoice_number,
+        total: Number(inv.total_amount),
+        isPaid: inv.is_paid,
+        pdfUrl,
+      });
+      window.open(url, '_blank');
+    } catch (e) {
+      toast.error(`Could not prepare WhatsApp share: ${(e as Error).message}`);
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const filtered = invoices.filter(inv => {

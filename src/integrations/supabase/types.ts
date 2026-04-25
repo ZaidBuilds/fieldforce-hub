@@ -284,6 +284,8 @@ export type Database = {
           customer_rating: number | null
           customer_signature_url: string | null
           description: string | null
+          eta_minutes: number | null
+          feedback_token: string | null
           id: string
           latitude: number | null
           longitude: number | null
@@ -299,6 +301,7 @@ export type Database = {
           service_type: string | null
           status: Database["public"]["Enums"]["job_status"]
           title: string
+          tracking_token: string | null
           updated_at: string
           whatsapp_sent_at: string | null
         }
@@ -317,6 +320,8 @@ export type Database = {
           customer_rating?: number | null
           customer_signature_url?: string | null
           description?: string | null
+          eta_minutes?: number | null
+          feedback_token?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
@@ -332,6 +337,7 @@ export type Database = {
           service_type?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           title: string
+          tracking_token?: string | null
           updated_at?: string
           whatsapp_sent_at?: string | null
         }
@@ -350,6 +356,8 @@ export type Database = {
           customer_rating?: number | null
           customer_signature_url?: string | null
           description?: string | null
+          eta_minutes?: number | null
+          feedback_token?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
@@ -365,6 +373,7 @@ export type Database = {
           service_type?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           title?: string
+          tracking_token?: string | null
           updated_at?: string
           whatsapp_sent_at?: string | null
         }

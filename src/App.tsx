@@ -16,6 +16,10 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Track from "./pages/Track";
 import Feedback from "./pages/Feedback";
+import MapView from "./pages/MapView";
+import Contracts from "./pages/Contracts";
+import Inventory from "./pages/Inventory";
+import Expenses from "./pages/Expenses";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +38,10 @@ const App = () => (
           <Route path="/app/jobs" element={<Jobs />} />
           <Route path="/app/jobs/:id" element={<JobDetail />} />
           <Route path="/app/schedule" element={<Schedule />} />
+          <Route path="/app/map" element={<MapView />} />
+          <Route path="/app/contracts" element={<Contracts />} />
+          <Route path="/app/inventory" element={<Inventory />} />
+          <Route path="/app/expenses" element={<Expenses />} />
           <Route path="/app/technicians" element={<Technicians />} />
           <Route path="/app/customers" element={<Customers />} />
           <Route path="/app/invoices" element={<Invoices />} />

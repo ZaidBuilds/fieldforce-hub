@@ -2,8 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { format, subDays, eachDayOfInterval } from 'date-fns';
-import { TrendingUp, IndianRupee, Briefcase, Star } from 'lucide-react';
+import { TrendingUp, IndianRupee, Briefcase, Download, Wallet } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Reports() {
   const { data: jobs = [] } = useQuery({
@@ -12,6 +14,26 @@ export default function Reports() {
       const { data, error } = await supabase.from('jobs').select('*');
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: expenses = [] } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('expenses').select('*');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: invoices = [] } = useQuery({
+    queryKey: ['invoices-all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*, customers(name, gst_number, state)');
+      if (error) throw error;
+      return data ?? [];
     },
   });
 
@@ -27,6 +49,10 @@ export default function Reports() {
   const totalRevenue = last30.reduce((s, d) => s + d.revenue, 0);
   const totalJobs = last30.reduce((s, d) => s + d.completed, 0);
   const avgTicket = totalJobs ? Math.round(totalRevenue / totalJobs) : 0;
+  const totalExpenses30 = expenses
+    .filter((e: any) => new Date(e.spent_on) >= subDays(new Date(), 30))
+    .reduce((s: number, e: any) => s + Number(e.amount), 0);
+  const profit = totalRevenue - totalExpenses30;
 
   // Top services
   const services = jobs.reduce<Record<string, number>>((acc, j) => {
@@ -37,14 +63,50 @@ export default function Reports() {
   const topServices = Object.entries(services).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const maxSvc = Math.max(...topServices.map(([, n]) => n), 1);
 
+  const exportGSTR1 = () => {
+    if (!invoices.length) { toast.error('No invoices to export'); return; }
+    const rows = [
+      ['Invoice Number', 'Invoice Date', 'Customer Name', 'Customer GSTIN', 'Place of Supply', 'Taxable Value', 'GST Rate', 'GST Amount', 'Total'],
+      ...invoices.map((i: any) => [
+        i.invoice_number,
+        format(new Date(i.created_at), 'dd-MM-yyyy'),
+        i.customers?.name ?? '',
+        i.customers?.gst_number ?? '',
+        i.customers?.state ?? '',
+        i.subtotal,
+        i.gst_rate,
+        i.gst_amount,
+        i.total_amount,
+      ]),
+    ];
+    const csv = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gstr1-${format(new Date(), 'yyyy-MM')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('GSTR-1 exported');
+  };
+
   return (
-    <DashboardLayout title="Reports" subtitle="Business performance over the last 30 days">
+    <DashboardLayout
+      title="Reports"
+      subtitle="Business performance over the last 30 days"
+      action={
+        <Button onClick={exportGSTR1} variant="outline" className="gap-2 rounded-full">
+          <Download className="h-4 w-4" /> Export GSTR-1
+        </Button>
+      }
+    >
       <div className="space-y-5">
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { title: 'Revenue (30d)', value: `₹${totalRevenue.toLocaleString('en-IN')}`, icon: IndianRupee },
+            { title: 'Expenses (30d)', value: `₹${totalExpenses30.toLocaleString('en-IN')}`, icon: Wallet },
+            { title: 'Profit (30d)', value: `₹${profit.toLocaleString('en-IN')}`, icon: TrendingUp },
             { title: 'Jobs completed', value: totalJobs, icon: Briefcase },
-            { title: 'Avg. ticket size', value: `₹${avgTicket.toLocaleString('en-IN')}`, icon: TrendingUp },
           ].map(s => (
             <Card key={s.title} className="border-border/70 shadow-card">
               <CardContent className="flex items-center gap-4 p-5">

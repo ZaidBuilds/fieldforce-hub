@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import Logo from './Logo';
+import OnlineIndicator from './OnlineIndicator';
 
 interface AppHeaderProps {
   title?: string;
@@ -35,6 +36,7 @@ export default function AppHeader({ title, subtitle, action }: AppHeaderProps) {
           {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
         </div>
         <div className="hidden items-center gap-2 lg:flex">
+          <OnlineIndicator />
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input placeholder="Search jobs, customers…" className="h-10 w-72 rounded-full border-border/70 bg-secondary pl-9" />

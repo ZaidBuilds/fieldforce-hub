@@ -4,9 +4,10 @@ import { Card } from '@/components/ui/card';
 import Logo from '@/components/Logo';
 import {
   ArrowRight, MapPin, Camera, FileText, Smartphone, MessageCircle,
-  IndianRupee, ShieldCheck, Zap, Star, Clock, Users, CheckCircle2,
+  IndianRupee, ShieldCheck, Zap, Star, Clock, Users, CheckCircle2, X, TrendingUp, ChevronDown,
 } from 'lucide-react';
 import heroImage from '@/assets/hero-technician.jpg';
+import { useState } from 'react';
 
 const features = [
   { icon: MapPin, title: 'GPS Check-in / Check-out', desc: 'Verify your technician reached the site. Real-time location stamp on every job.' },
@@ -62,7 +63,70 @@ const testimonials = [
   },
 ];
 
+const caseStudies = [
+  {
+    company: 'Cool Comfort AC',
+    city: 'Lucknow',
+    metric: '+₹3.4L',
+    label: 'Extra monthly revenue',
+    detail: '6 technicians, 22% more jobs/day after switching from diary.',
+  },
+  {
+    company: 'Mehta Plumbing',
+    city: 'Pune',
+    metric: '–68%',
+    label: 'Cash leakage gone',
+    detail: 'Owner now reconciles UPI + cash collection daily in one tap.',
+  },
+  {
+    company: 'Sheikh Electricals',
+    city: 'Hyderabad',
+    metric: '4.9★',
+    label: 'Customer rating',
+    detail: 'Photo proof + WhatsApp updates dropped complaints by 60%.',
+  },
+];
+
+const comparison = [
+  { f: 'Job dispatch in <10 sec', us: true, them: false },
+  { f: 'GPS check-in / check-out', us: true, them: false },
+  { f: 'WhatsApp invoice with PDF', us: true, them: false },
+  { f: 'Live customer tracking link', us: true, them: false },
+  { f: 'GST-ready reports & GSTR-1 export', us: true, them: false },
+  { f: 'AMC contracts auto-renew', us: true, them: false },
+  { f: 'Cash collection accountability', us: true, them: false },
+  { f: 'Works on a ₹6,000 Android phone', us: true, them: true },
+];
+
+const faqs = [
+  {
+    q: 'Do my technicians need an expensive smartphone?',
+    a: 'No. FieldForce works on any Android phone with 2GB RAM and a basic 4G plan. The app is installable from the browser — no Play Store needed.',
+  },
+  {
+    q: 'What if there is no internet at the customer site?',
+    a: 'Technicians can still check in, capture photos, take signatures and create jobs. Everything queues up and syncs automatically when the network is back.',
+  },
+  {
+    q: 'Is the GST invoice valid for filing?',
+    a: 'Yes. Invoices include your GSTIN, HSN/SAC codes, place of supply and CGST/SGST split. You can export GSTR-1 ready CSV from the Reports section.',
+  },
+  {
+    q: 'Can I move from my current spreadsheet?',
+    a: 'Yes. Import your customers and parts catalogue from any CSV file in under 10 minutes. Our team helps free of cost on the Business plan.',
+  },
+  {
+    q: 'Who owns my data?',
+    a: 'You do. Export everything as CSV any time. Cancel and we delete your data within 30 days — no lock-in, no fine print.',
+  },
+  {
+    q: 'How is this different from Urban Company?',
+    a: 'Urban Company is a marketplace that takes 25–30% commission and keeps the customer. FieldForce is software for YOUR brand — keep 100% of the revenue and the customer relationship.',
+  },
+];
+
 export default function Landing() {
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
@@ -71,9 +135,9 @@ export default function Landing() {
           <Logo />
           <nav className="hidden items-center gap-8 md:flex">
             <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</a>
+            <a href="#results" className="text-sm font-medium text-muted-foreground hover:text-foreground">Results</a>
             <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground">Pricing</a>
-            <a href="#niches" className="text-sm font-medium text-muted-foreground hover:text-foreground">Industries</a>
-            <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground">Customers</a>
+            <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground">FAQ</a>
           </nav>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" className="hidden sm:inline-flex">

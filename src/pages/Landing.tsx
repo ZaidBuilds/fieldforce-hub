@@ -4,9 +4,10 @@ import { Card } from '@/components/ui/card';
 import Logo from '@/components/Logo';
 import {
   ArrowRight, MapPin, Camera, FileText, Smartphone, MessageCircle,
-  IndianRupee, ShieldCheck, Zap, Star, Clock, Users, CheckCircle2,
+  IndianRupee, ShieldCheck, Zap, Star, Clock, Users, CheckCircle2, X, TrendingUp, ChevronDown,
 } from 'lucide-react';
 import heroImage from '@/assets/hero-technician.jpg';
+import { useState } from 'react';
 
 const features = [
   { icon: MapPin, title: 'GPS Check-in / Check-out', desc: 'Verify your technician reached the site. Real-time location stamp on every job.' },
@@ -62,7 +63,70 @@ const testimonials = [
   },
 ];
 
+const caseStudies = [
+  {
+    company: 'Cool Comfort AC',
+    city: 'Lucknow',
+    metric: '+₹3.4L',
+    label: 'Extra monthly revenue',
+    detail: '6 technicians, 22% more jobs/day after switching from diary.',
+  },
+  {
+    company: 'Mehta Plumbing',
+    city: 'Pune',
+    metric: '–68%',
+    label: 'Cash leakage gone',
+    detail: 'Owner now reconciles UPI + cash collection daily in one tap.',
+  },
+  {
+    company: 'Sheikh Electricals',
+    city: 'Hyderabad',
+    metric: '4.9★',
+    label: 'Customer rating',
+    detail: 'Photo proof + WhatsApp updates dropped complaints by 60%.',
+  },
+];
+
+const comparison = [
+  { f: 'Job dispatch in <10 sec', us: true, them: false },
+  { f: 'GPS check-in / check-out', us: true, them: false },
+  { f: 'WhatsApp invoice with PDF', us: true, them: false },
+  { f: 'Live customer tracking link', us: true, them: false },
+  { f: 'GST-ready reports & GSTR-1 export', us: true, them: false },
+  { f: 'AMC contracts auto-renew', us: true, them: false },
+  { f: 'Cash collection accountability', us: true, them: false },
+  { f: 'Works on a ₹6,000 Android phone', us: true, them: true },
+];
+
+const faqs = [
+  {
+    q: 'Do my technicians need an expensive smartphone?',
+    a: 'No. FieldForce works on any Android phone with 2GB RAM and a basic 4G plan. The app is installable from the browser — no Play Store needed.',
+  },
+  {
+    q: 'What if there is no internet at the customer site?',
+    a: 'Technicians can still check in, capture photos, take signatures and create jobs. Everything queues up and syncs automatically when the network is back.',
+  },
+  {
+    q: 'Is the GST invoice valid for filing?',
+    a: 'Yes. Invoices include your GSTIN, HSN/SAC codes, place of supply and CGST/SGST split. You can export GSTR-1 ready CSV from the Reports section.',
+  },
+  {
+    q: 'Can I move from my current spreadsheet?',
+    a: 'Yes. Import your customers and parts catalogue from any CSV file in under 10 minutes. Our team helps free of cost on the Business plan.',
+  },
+  {
+    q: 'Who owns my data?',
+    a: 'You do. Export everything as CSV any time. Cancel and we delete your data within 30 days — no lock-in, no fine print.',
+  },
+  {
+    q: 'How is this different from Urban Company?',
+    a: 'Urban Company is a marketplace that takes 25–30% commission and keeps the customer. FieldForce is software for YOUR brand — keep 100% of the revenue and the customer relationship.',
+  },
+];
+
 export default function Landing() {
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
@@ -71,9 +135,9 @@ export default function Landing() {
           <Logo />
           <nav className="hidden items-center gap-8 md:flex">
             <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</a>
+            <a href="#results" className="text-sm font-medium text-muted-foreground hover:text-foreground">Results</a>
             <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground">Pricing</a>
-            <a href="#niches" className="text-sm font-medium text-muted-foreground hover:text-foreground">Industries</a>
-            <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground">Customers</a>
+            <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground">FAQ</a>
           </nav>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" className="hidden sm:inline-flex">
@@ -267,6 +331,86 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Results / Case studies */}
+      <section id="results" className="border-y border-border bg-secondary/40">
+        <div className="container py-20 sm:py-28">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+              Real numbers
+            </span>
+            <h2 className="mt-4 font-heading text-4xl font-bold tracking-tight sm:text-5xl">
+              What 90 days on FieldForce looks like.
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              Operators we onboarded between Jan–Mar 2026. Same teams, same city — different system.
+            </p>
+          </div>
+          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+            {caseStudies.map(c => (
+              <Card key={c.company} className="relative overflow-hidden p-7 shadow-card">
+                <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
+                <div className="relative">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-success" />
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      {c.label}
+                    </p>
+                  </div>
+                  <p className="mt-3 font-heading text-5xl font-extrabold tracking-tight gradient-text">
+                    {c.metric}
+                  </p>
+                  <p className="mt-4 text-sm text-foreground">{c.detail}</p>
+                  <p className="mt-5 border-t border-border pt-4 text-sm font-semibold">
+                    {c.company} <span className="font-normal text-muted-foreground">— {c.city}</span>
+                  </p>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Comparison */}
+          <div className="mt-20">
+            <div className="mx-auto max-w-2xl text-center">
+              <h3 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
+                FieldForce vs the diary &amp; Excel.
+              </h3>
+              <p className="mt-3 text-muted-foreground">
+                Why 1,800+ owners stopped chasing technicians on phone calls.
+              </p>
+            </div>
+            <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+              <div className="grid grid-cols-[1fr_120px_120px] bg-secondary text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                <div className="px-5 py-3">Capability</div>
+                <div className="px-5 py-3 text-center text-primary">FieldForce</div>
+                <div className="px-5 py-3 text-center">Diary / Excel</div>
+              </div>
+              {comparison.map((row, i) => (
+                <div
+                  key={row.f}
+                  className={`grid grid-cols-[1fr_120px_120px] items-center text-sm ${i % 2 === 1 ? 'bg-secondary/40' : ''}`}
+                >
+                  <div className="px-5 py-3.5">{row.f}</div>
+                  <div className="px-5 py-3.5 text-center">
+                    {row.us ? (
+                      <CheckCircle2 className="mx-auto h-5 w-5 text-success" />
+                    ) : (
+                      <X className="mx-auto h-5 w-5 text-muted-foreground/40" />
+                    )}
+                  </div>
+                  <div className="px-5 py-3.5 text-center">
+                    {row.them ? (
+                      <CheckCircle2 className="mx-auto h-5 w-5 text-success/60" />
+                    ) : (
+                      <X className="mx-auto h-5 w-5 text-muted-foreground/40" />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="border-t border-border bg-secondary/40">
         <div className="container py-20 sm:py-28">
@@ -306,6 +450,52 @@ export default function Landing() {
                 </Button>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="container py-20 sm:py-28">
+        <div className="grid gap-12 lg:grid-cols-[1fr_2fr] lg:gap-16">
+          <div>
+            <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+              FAQ
+            </span>
+            <h2 className="mt-4 font-heading text-4xl font-bold tracking-tight sm:text-5xl">
+              Questions owners ask before signing up.
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              Still unsure? WhatsApp our founders directly — we usually reply within an hour.
+            </p>
+            <Button asChild variant="outline" className="mt-6 rounded-full">
+              <a href="https://wa.me/918000000000" target="_blank" rel="noreferrer">
+                <MessageCircle className="mr-1 h-4 w-4" /> Talk to a human
+              </a>
+            </Button>
+          </div>
+          <div className="divide-y divide-border rounded-2xl border border-border bg-card shadow-card">
+            {faqs.map((f, i) => {
+              const isOpen = openFaq === i;
+              return (
+                <button
+                  key={f.q}
+                  type="button"
+                  onClick={() => setOpenFaq(isOpen ? null : i)}
+                  className="block w-full px-6 py-5 text-left transition-colors hover:bg-secondary/50"
+                  aria-expanded={isOpen}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <p className="font-heading text-base font-semibold">{f.q}</p>
+                    <ChevronDown
+                      className={`mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? 'rotate-180 text-primary' : ''}`}
+                    />
+                  </div>
+                  {isOpen && (
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{f.a}</p>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>

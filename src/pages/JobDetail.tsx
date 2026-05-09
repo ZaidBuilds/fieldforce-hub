@@ -360,6 +360,19 @@ export default function JobDetail() {
                   )}
                 </div>
               )}
+              {job.customer_signature_url && (
+                <div className="mt-4 rounded-xl border border-border bg-white p-3">
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Customer signature
+                  </p>
+                  <img
+                    src={job.customer_signature_url}
+                    alt="Customer signature"
+                    className="max-h-32 w-auto"
+                    loading="lazy"
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -591,6 +604,19 @@ export default function JobDetail() {
           </Card>
         </div>
       </div>
+      <SignaturePad
+        open={sigOpen}
+        onOpenChange={(o) => { if (!savingSig) setSigOpen(o); }}
+        onConfirm={completeWithSignature}
+        saving={savingSig}
+      />
+      {sigOpen && (
+        <div className="fixed bottom-4 left-1/2 z-[60] -translate-x-1/2">
+          <Button variant="ghost" size="sm" onClick={skipSignature} disabled={savingSig}>
+            Complete without signature
+          </Button>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

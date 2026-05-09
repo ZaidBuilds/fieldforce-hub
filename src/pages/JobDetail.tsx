@@ -24,6 +24,7 @@ import {
   buildFeedbackWhatsAppUrl,
   buildInvoiceWhatsAppUrl,
 } from '@/lib/invoiceShare';
+import SignaturePad from '@/components/SignaturePad';
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -33,6 +34,8 @@ export default function JobDetail() {
   const [partPrice, setPartPrice] = useState('');
   const [partQty, setPartQty] = useState('1');
   const [sharingInvoice, setSharingInvoice] = useState(false);
+  const [sigOpen, setSigOpen] = useState(false);
+  const [savingSig, setSavingSig] = useState(false);
 
   const { data: job, isLoading } = useQuery({
     queryKey: ['job', id],
@@ -162,8 +165,38 @@ export default function JobDetail() {
   };
 
   const handleCheckOut = () => {
+    setSigOpen(true);
+  };
+
+  const completeWithSignature = async (dataUrl: string) => {
+    setSavingSig(true);
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      const path = `signatures/${job!.id}-${Date.now()}.png`;
+      const { error: upErr } = await supabase.storage.from('job-assets').upload(path, blob, {
+        contentType: 'image/png',
+        upsert: true,
+      });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from('job-assets').getPublicUrl(path);
+      updateJob.mutate({
+        status: 'completed',
+        checkout_at: new Date().toISOString(),
+        customer_signature_url: pub.publicUrl,
+      });
+      toast.success('Job completed with customer signature');
+      setSigOpen(false);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSavingSig(false);
+    }
+  };
+
+  const skipSignature = () => {
     updateJob.mutate({ status: 'completed', checkout_at: new Date().toISOString() });
     toast.success('Job completed');
+    setSigOpen(false);
   };
 
   const trackingUrl = job.tracking_token
@@ -325,6 +358,19 @@ export default function JobDetail() {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+              {job.customer_signature_url && (
+                <div className="mt-4 rounded-xl border border-border bg-white p-3">
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Customer signature
+                  </p>
+                  <img
+                    src={job.customer_signature_url}
+                    alt="Customer signature"
+                    className="max-h-32 w-auto"
+                    loading="lazy"
+                  />
                 </div>
               )}
             </CardContent>
@@ -558,6 +604,19 @@ export default function JobDetail() {
           </Card>
         </div>
       </div>
+      <SignaturePad
+        open={sigOpen}
+        onOpenChange={(o) => { if (!savingSig) setSigOpen(o); }}
+        onConfirm={completeWithSignature}
+        saving={savingSig}
+      />
+      {sigOpen && (
+        <div className="fixed bottom-4 left-1/2 z-[60] -translate-x-1/2">
+          <Button variant="ghost" size="sm" onClick={skipSignature} disabled={savingSig}>
+            Complete without signature
+          </Button>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

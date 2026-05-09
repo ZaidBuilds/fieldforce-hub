@@ -331,6 +331,86 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Results / Case studies */}
+      <section id="results" className="border-y border-border bg-secondary/40">
+        <div className="container py-20 sm:py-28">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+              Real numbers
+            </span>
+            <h2 className="mt-4 font-heading text-4xl font-bold tracking-tight sm:text-5xl">
+              What 90 days on FieldForce looks like.
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              Operators we onboarded between Jan–Mar 2026. Same teams, same city — different system.
+            </p>
+          </div>
+          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+            {caseStudies.map(c => (
+              <Card key={c.company} className="relative overflow-hidden p-7 shadow-card">
+                <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
+                <div className="relative">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-success" />
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      {c.label}
+                    </p>
+                  </div>
+                  <p className="mt-3 font-heading text-5xl font-extrabold tracking-tight gradient-text">
+                    {c.metric}
+                  </p>
+                  <p className="mt-4 text-sm text-foreground">{c.detail}</p>
+                  <p className="mt-5 border-t border-border pt-4 text-sm font-semibold">
+                    {c.company} <span className="font-normal text-muted-foreground">— {c.city}</span>
+                  </p>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Comparison */}
+          <div className="mt-20">
+            <div className="mx-auto max-w-2xl text-center">
+              <h3 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
+                FieldForce vs the diary &amp; Excel.
+              </h3>
+              <p className="mt-3 text-muted-foreground">
+                Why 1,800+ owners stopped chasing technicians on phone calls.
+              </p>
+            </div>
+            <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+              <div className="grid grid-cols-[1fr_120px_120px] bg-secondary text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                <div className="px-5 py-3">Capability</div>
+                <div className="px-5 py-3 text-center text-primary">FieldForce</div>
+                <div className="px-5 py-3 text-center">Diary / Excel</div>
+              </div>
+              {comparison.map((row, i) => (
+                <div
+                  key={row.f}
+                  className={`grid grid-cols-[1fr_120px_120px] items-center text-sm ${i % 2 === 1 ? 'bg-secondary/40' : ''}`}
+                >
+                  <div className="px-5 py-3.5">{row.f}</div>
+                  <div className="px-5 py-3.5 text-center">
+                    {row.us ? (
+                      <CheckCircle2 className="mx-auto h-5 w-5 text-success" />
+                    ) : (
+                      <X className="mx-auto h-5 w-5 text-muted-foreground/40" />
+                    )}
+                  </div>
+                  <div className="px-5 py-3.5 text-center">
+                    {row.them ? (
+                      <CheckCircle2 className="mx-auto h-5 w-5 text-success/60" />
+                    ) : (
+                      <X className="mx-auto h-5 w-5 text-muted-foreground/40" />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="border-t border-border bg-secondary/40">
         <div className="container py-20 sm:py-28">
@@ -370,6 +450,52 @@ export default function Landing() {
                 </Button>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="container py-20 sm:py-28">
+        <div className="grid gap-12 lg:grid-cols-[1fr_2fr] lg:gap-16">
+          <div>
+            <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+              FAQ
+            </span>
+            <h2 className="mt-4 font-heading text-4xl font-bold tracking-tight sm:text-5xl">
+              Questions owners ask before signing up.
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              Still unsure? WhatsApp our founders directly — we usually reply within an hour.
+            </p>
+            <Button asChild variant="outline" className="mt-6 rounded-full">
+              <a href="https://wa.me/918000000000" target="_blank" rel="noreferrer">
+                <MessageCircle className="mr-1 h-4 w-4" /> Talk to a human
+              </a>
+            </Button>
+          </div>
+          <div className="divide-y divide-border rounded-2xl border border-border bg-card shadow-card">
+            {faqs.map((f, i) => {
+              const isOpen = openFaq === i;
+              return (
+                <button
+                  key={f.q}
+                  type="button"
+                  onClick={() => setOpenFaq(isOpen ? null : i)}
+                  className="block w-full px-6 py-5 text-left transition-colors hover:bg-secondary/50"
+                  aria-expanded={isOpen}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <p className="font-heading text-base font-semibold">{f.q}</p>
+                    <ChevronDown
+                      className={`mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? 'rotate-180 text-primary' : ''}`}
+                    />
+                  </div>
+                  {isOpen && (
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{f.a}</p>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>

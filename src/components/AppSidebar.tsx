@@ -1,4 +1,4 @@
-import { LayoutDashboard, Briefcase, Users, FileText, MapPin, Settings, Calendar, BarChart3, Repeat, Package, Wallet, Map } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Users, FileText, MapPin, Settings, Calendar, BarChart3, Repeat, Package, Wallet, Map, Receipt, Sparkles } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import Logo from './Logo';
@@ -25,9 +25,11 @@ const navGroups = [
     label: 'Finance',
     items: [
       { to: '/app/invoices', icon: FileText, label: 'Invoices' },
+      { to: '/app/collections', icon: Receipt, label: 'Collections' },
       { to: '/app/inventory', icon: Package, label: 'Inventory' },
       { to: '/app/expenses', icon: Wallet, label: 'Expenses' },
       { to: '/app/reports', icon: BarChart3, label: 'Reports' },
+      { to: '/app/insights', icon: Sparkles, label: 'Insights' },
     ],
   },
 ];

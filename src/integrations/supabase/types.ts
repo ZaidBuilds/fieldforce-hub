@@ -182,6 +182,42 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_movements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          item_id: string
+          job_id: string | null
+          note: string | null
+          quantity: number
+          technician_id: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_id: string
+          job_id?: string | null
+          note?: string | null
+          quantity?: number
+          technician_id?: string | null
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_id?: string
+          job_id?: string | null
+          note?: string | null
+          quantity?: number
+          technician_id?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           created_at: string
@@ -530,6 +566,30 @@ export type Database = {
           notes?: string | null
           service_type?: string | null
           title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      technician_stock: {
+        Row: {
+          id: string
+          item_id: string
+          quantity: number
+          technician_id: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          quantity?: number
+          technician_id: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          quantity?: number
+          technician_id?: string
           updated_at?: string
         }
         Relationships: []

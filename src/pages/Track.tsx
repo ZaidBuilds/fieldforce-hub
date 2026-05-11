@@ -13,6 +13,7 @@ import Logo from '@/components/Logo';
 
 type TrackData = {
   id: string;
+  customer_id: string;
   title: string;
   description: string | null;
   status: 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
@@ -31,6 +32,7 @@ type TrackData = {
   customers: { name: string; phone: string } | null;
   technician: { full_name: string; phone: string } | null;
   business: { business_name: string; phone: string | null; logo_url: string | null } | null;
+  history: Array<{ id: string; title: string; service_type: string | null; checkout_at: string | null; status: string }>;
 };
 
 const stages = [
@@ -81,8 +83,17 @@ export default function Track() {
         .limit(1)
         .maybeSingle();
 
+      // Service history for the same customer (excluding current)
+      const { data: history } = await supabase
+        .from('jobs')
+        .select('id, title, service_type, checkout_at, status')
+        .eq('customer_id', job.customer_id)
+        .neq('id', job.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
       if (!active) return;
-      setData({ ...(job as object), technician, business } as TrackData);
+      setData({ ...(job as object), technician, business, history: history ?? [] } as TrackData);
       setLoading(false);
     };
     load();
@@ -309,6 +320,30 @@ export default function Track() {
                 Thanks for rating us {data.customer_rating}/5
                 {data.customer_feedback && ` — "${data.customer_feedback}"`}
               </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Service history */}
+        {data.history && data.history.length > 0 && (
+          <Card className="border-border/70 shadow-card">
+            <CardContent className="space-y-3 p-5">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                Your service history
+              </p>
+              <ul className="divide-y divide-border/60">
+                {data.history.map(h => (
+                  <li key={h.id} className="flex items-center justify-between py-2 text-sm">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">{h.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {h.service_type ?? '—'}{h.checkout_at && ` · ${format(new Date(h.checkout_at), 'dd MMM yyyy')}`}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="capitalize">{h.status.replace('_', ' ')}</Badge>
+                  </li>
+                ))}
+              </ul>
             </CardContent>
           </Card>
         )}

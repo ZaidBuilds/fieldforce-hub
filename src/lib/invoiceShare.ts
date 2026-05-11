@@ -103,3 +103,49 @@ export function buildFeedbackWhatsAppUrl(opts: {
   const msg = `${greeting}\n\nThanks for choosing us for "${opts.jobTitle}". How was your experience? It takes just 30 seconds:\n\n${opts.feedbackUrl}${sig}`;
   return `https://wa.me/91${cleaned}?text=${encodeURIComponent(msg)}`;
 }
+
+/**
+ * Polite payment-reminder WhatsApp message for an unpaid invoice.
+ */
+export function buildPaymentReminderWhatsAppUrl(opts: {
+  phone: string;
+  customerName?: string | null;
+  invoiceNumber: string;
+  total: number;
+  daysOverdue: number;
+  upiLink?: string | null;
+  pdfUrl?: string | null;
+  businessName?: string | null;
+}) {
+  const cleaned = opts.phone.replace(/\D/g, '').slice(-10);
+  const greeting = opts.customerName ? `Hi ${opts.customerName},` : 'Hi,';
+  const amount = `₹${opts.total.toLocaleString('en-IN')}`;
+  const aging =
+    opts.daysOverdue > 0
+      ? `This invoice is ${opts.daysOverdue} day${opts.daysOverdue === 1 ? '' : 's'} overdue.`
+      : `Quick reminder — payment is pending.`;
+  const upi = opts.upiLink ? `\n\nPay instantly via UPI: ${opts.upiLink}` : '';
+  const pdf = opts.pdfUrl ? `\nInvoice PDF: ${opts.pdfUrl}` : '';
+  const sig = opts.businessName ? `\n\n— ${opts.businessName}` : '';
+  const msg = `${greeting}\n\nA gentle reminder for invoice ${opts.invoiceNumber} of ${amount}.\n${aging}${upi}${pdf}${sig}`;
+  return `https://wa.me/91${cleaned}?text=${encodeURIComponent(msg)}`;
+}
+
+/**
+ * AMC renewal reminder.
+ */
+export function buildRenewalWhatsAppUrl(opts: {
+  phone: string;
+  customerName?: string | null;
+  contractTitle: string;
+  dueDate: string;
+  amount?: number | null;
+  businessName?: string | null;
+}) {
+  const cleaned = opts.phone.replace(/\D/g, '').slice(-10);
+  const greeting = opts.customerName ? `Hi ${opts.customerName},` : 'Hi,';
+  const amt = opts.amount && opts.amount > 0 ? ` (₹${opts.amount.toLocaleString('en-IN')})` : '';
+  const sig = opts.businessName ? `\n\n— ${opts.businessName}` : '';
+  const msg = `${greeting}\n\nYour service "${opts.contractTitle}"${amt} is due on ${opts.dueDate}. Reply to confirm and we'll schedule it for you.${sig}`;
+  return `https://wa.me/91${cleaned}?text=${encodeURIComponent(msg)}`;
+}

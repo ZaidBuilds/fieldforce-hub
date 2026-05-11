@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Repeat, Calendar, IndianRupee, PlayCircle } from 'lucide-react';
+import { Plus, Repeat, Calendar, IndianRupee, PlayCircle, MessageCircle, AlertTriangle, BellRing } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, addDays } from 'date-fns';
+import { format, addDays, differenceInDays } from 'date-fns';
+import { buildRenewalWhatsAppUrl } from '@/lib/invoiceShare';
 
 export default function Contracts() {
   const { user } = useAuth();
@@ -27,6 +28,14 @@ export default function Contracts() {
         .order('next_due_date', { ascending: true });
       if (error) throw error;
       return data ?? [];
+    },
+  });
+
+  const { data: business } = useQuery({
+    queryKey: ['biz-settings-name'],
+    queryFn: async () => {
+      const { data } = await supabase.from('business_settings').select('business_name').limit(1).maybeSingle();
+      return data;
     },
   });
 
@@ -94,6 +103,26 @@ export default function Contracts() {
 
   const today = new Date();
 
+  const overdue = contracts.filter((c: any) => c.active && new Date(c.next_due_date) < today);
+  const expiring = contracts.filter((c: any) => {
+    const d = differenceInDays(new Date(c.next_due_date), today);
+    return c.active && d >= 0 && d <= 30;
+  });
+  const renewalRevenue = [...overdue, ...expiring].reduce((s: number, c: any) => s + Number(c.amount ?? 0), 0);
+
+  const sendRenewal = (c: any) => {
+    if (!c.customers?.phone) { toast.error('Customer phone missing'); return; }
+    const url = buildRenewalWhatsAppUrl({
+      phone: c.customers.phone,
+      customerName: c.customers.name,
+      contractTitle: c.title,
+      dueDate: format(new Date(c.next_due_date), 'dd MMM yyyy'),
+      amount: Number(c.amount ?? 0),
+      businessName: business?.business_name,
+    });
+    window.open(url, '_blank');
+  };
+
   return (
     <DashboardLayout
       title="AMC Contracts"
@@ -130,6 +159,38 @@ export default function Contracts() {
         </Dialog>
       }
     >
+      {(overdue.length > 0 || expiring.length > 0) && (
+        <div className="mb-5 grid gap-3 sm:grid-cols-3">
+          <Card className="border-destructive/40 bg-destructive/5 shadow-card">
+            <CardContent className="flex items-center gap-3 p-4">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <div>
+                <p className="font-heading text-2xl font-bold">{overdue.length}</p>
+                <p className="text-xs text-muted-foreground">Overdue renewals</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-warning/40 bg-warning/5 shadow-card">
+            <CardContent className="flex items-center gap-3 p-4">
+              <BellRing className="h-5 w-5 text-warning" />
+              <div>
+                <p className="font-heading text-2xl font-bold">{expiring.length}</p>
+                <p className="text-xs text-muted-foreground">Due in next 30 days</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-success/40 bg-success/5 shadow-card">
+            <CardContent className="flex items-center gap-3 p-4">
+              <IndianRupee className="h-5 w-5 text-success" />
+              <div>
+                <p className="font-heading text-2xl font-bold">₹{renewalRevenue.toLocaleString('en-IN')}</p>
+                <p className="text-xs text-muted-foreground">Renewal pipeline</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="space-y-3">
         {contracts.length === 0 ? (
           <Card className="shadow-card"><CardContent className="py-12 text-center text-muted-foreground">
@@ -137,14 +198,17 @@ export default function Contracts() {
           </CardContent></Card>
         ) : contracts.map((c: any) => {
           const due = new Date(c.next_due_date);
-          const overdue = due < today;
+          const isOverdue = due < today;
+          const daysAway = differenceInDays(due, today);
+          const renewSoon = daysAway >= 0 && daysAway <= 14;
           return (
             <Card key={c.id} className="border-border/70 shadow-card">
               <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <p className="font-heading font-semibold">{c.title}</p>
-                    {overdue && <Badge variant="destructive">Due</Badge>}
+                    {isOverdue && <Badge variant="destructive">Overdue</Badge>}
+                    {!isOverdue && renewSoon && <Badge className="bg-warning text-warning-foreground">Renew now</Badge>}
                     {!c.active && <Badge variant="secondary">Inactive</Badge>}
                   </div>
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -154,9 +218,14 @@ export default function Contracts() {
                     {c.amount > 0 && <span className="flex items-center gap-1"><IndianRupee className="h-3 w-3" />{c.amount.toLocaleString('en-IN')}</span>}
                   </div>
                 </div>
-                <Button size="sm" variant="outline" className="gap-1" onClick={() => generateJob.mutate(c)} disabled={generateJob.isPending}>
-                  <PlayCircle className="h-4 w-4" /> Generate job
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" className="gap-1" onClick={() => sendRenewal(c)}>
+                    <MessageCircle className="h-4 w-4" /> Remind
+                  </Button>
+                  <Button size="sm" variant="outline" className="gap-1" onClick={() => generateJob.mutate(c)} disabled={generateJob.isPending}>
+                    <PlayCircle className="h-4 w-4" /> Generate job
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );

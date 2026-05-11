@@ -20,6 +20,8 @@ import MapView from "./pages/MapView";
 import Contracts from "./pages/Contracts";
 import Inventory from "./pages/Inventory";
 import Expenses from "./pages/Expenses";
+import Collections from "./pages/Collections";
+import Insights from "./pages/Insights";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +44,8 @@ const App = () => (
           <Route path="/app/contracts" element={<Contracts />} />
           <Route path="/app/inventory" element={<Inventory />} />
           <Route path="/app/expenses" element={<Expenses />} />
+          <Route path="/app/collections" element={<Collections />} />
+          <Route path="/app/insights" element={<Insights />} />
           <Route path="/app/technicians" element={<Technicians />} />
           <Route path="/app/customers" element={<Customers />} />
           <Route path="/app/invoices" element={<Invoices />} />
